@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>NID Extractor</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      padding: 10px;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      color: #1a73e8;
+    }
+
+    .controls {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    input {
+      padding: 6px;
+      margin: 5px;
+      width: 160px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 6px 16px;
+      background: #1a73e8;
+      margin-top: 10px;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0f5bd2;
+    }
+
+    .section {
+      background: white;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    #results,
+    #logs {
+      font-family: monospace;
+      white-space: pre-wrap;
+      font-size: 13px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .green {
+      color: green;
+      font-weight: bold;
+    }
+
+    .executing {
+      color: #d32f2f;
+      font-weight: bold;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Login Section -->
+  <div id="loginSection" class="login-box">
+    <h2>🔐 Login to Continue</h2>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="checkLogin()">Login</button>
+    <p id="loginStatus"></p>
+  </div>
+
+  <!-- App Section -->
+  <div id="appSection" class="container hidden">
+    <h1>NID Extractor</h1>
+
+    <div class="controls">
+      <input type="number" id="startNid" placeholder="Start NID (min 9-digits)" />
+      <div>Batch size fixed to 2000</div>
+      <button onclick="startExtraction()">Start Extraction</button>
+      <div id="workerMessage"></div>
+      <div id="status" class="executing"></div>
+    </div>
+
+    <div class="section">
+      <strong>✅ Fetched NIDs</strong>
+      <button onclick="copyFetchedNIDs()">Copy</button>
+      <div id="results"></div>
+    </div>
+
+    <div class="section">
+      <strong>📜 Logs ------- (Scrolable)</strong>
+      <div id="logs"></div>
+    </div>
+  </div>
+
+  <script>
+    const users = [
+      { username: "EKR", password: "9752" },
+      { username: "test", password: "pass" },
+      { username: "nandiog", password: "QR4&tDx6" }
+    ];
+
+    function checkLogin() {
+      const u = document.getElementById("username").value.trim();
+      const p = document.getElementById("password").value.trim();
+      const status = document.getElementById("loginStatus");
+
+      const found = users.find(user => user.username === u && user.password === p);
+      if (found) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("appSection").classList.remove("hidden");
+      } else {
+        status.textContent = "❌ Invalid credentials!";
+      }
+    }
+
+    const END_NID = 4500000000;
+    const BATCH_SIZE = 2000;
+
+    async function fetchNidWithRetry(nid, retries = 3, delay = 300) {
+      const url = `https://learn.aakashitutor.com/api/getquestionsforquiz?nid=${nid}&noredirect=true`;
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          const text = await res.text();
+          if (text.includes("_without_answer")) return nid;
+          return null;
+        } catch (e) {
+          if (attempt < retries) await new Promise(res => setTimeout(res, delay));
+        }
+      }
+      return null;
+    }
+
+    async function startExtraction() {
+      const start = parseInt(document.getElementById("startNid").value);
+      const workers = 50;
+      const resultsDiv = document.getElementById("results");
+      const logsDiv = document.getElementById("logs");
+      const message = document.getElementById("workerMessage");
+      const status = document.getElementById("status");
+
+      resultsDiv.textContent = "";
+      logsDiv.textContent = "";
+      message.textContent = "";
+      status.textContent = "";
+
+      if (!start || isNaN(start) || start < 100000000 || start >= END_NID) {
+        return alert("⚠️ Please enter a valid Start NID below 4500000000");
+      }
+
+      const total = END_NID - start;
+      const batches = Math.ceil(total / BATCH_SIZE);
+      const approxTime = ((batches / workers) * 2).toFixed(1);
+
+      logsDiv.innerText += `🔁 Total NIDs to check: ${total}\n⏳ Approx time: ${approxTime}s\n`;
+
+      let dots = 0;
+      status.textContent = "⏳ Executing";
+      const interval = setInterval(() => {
+        dots = (dots + 1) % 6;
+        status.textContent = "⏳ Executing" + ".".repeat(dots);
+      }, 500);
+
+      async function runWithConcurrency(nids, concurrency = 100) {
+        const results = [];
+        let index = 0;
+
+        async function worker() {
+          while (index < nids.length) {
+            const nid = nids[index++];
+            const result = await fetchNidWithRetry(nid);
+            results.push(result);
+          }
+        }
+
+        const pool = Array.from({ length: concurrency }, worker);
+        await Promise.all(pool);
+        return results;
+      }
+
+      for (let i = 0; i < total; i += BATCH_SIZE) {
+        const batchStart = start + i;
+        const batchEnd = Math.min(batchStart + BATCH_SIZE - 1, END_NID);
+        const range = Array.from({ length: batchEnd - batchStart + 1 }, (_, idx) => batchStart + idx);
+
+        const results = await runWithConcurrency(range, 100); // 100 parallel fetches
+        const found = results.filter(Boolean);
+
+        found.forEach(nid => resultsDiv.innerText += `${nid}\n`);
+        logsDiv.innerText += `✅ Batch ${batchStart} to ${batchEnd} completed | ${range.length} NIDs checked\n`;
+
+        if (((i / BATCH_SIZE) % 10 === 0) && i > 0) {
+          logsDiv.innerText += `⏸️ Cooling down for 3 seconds...\n`;
+          await new Promise(resolve => setTimeout(resolve, 3500));
+        }
+      }
+
+      clearInterval(interval);
+      status.textContent = "✅ Done!";
+    }
+
+    function copyFetchedNIDs() {
+      const text = document.getElementById("results").innerText.trim();
+      if (!text) return alert("⚠️ No NIDs found to copy.");
+      navigator.clipboard.writeText(text).then(() => {
+        alert("✅ All Fetched NIDs copied to clipboard!");
+      });
+    }
+  </script>
+
+</body>
+
+</html>
