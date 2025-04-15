@@ -4,108 +4,81 @@
 <head>
   <meta charset="UTF-8">
   <title>NID Extractor</title>
-  
-     <style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #f0f4f8;
-    padding: 20px;
-    margin: 0;
-  }
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      padding: 20px;
+      margin: 0;
+    }
 
-  h1 {
-    text-align: center;
-    font-size: 44px;
-    color: #1a73e8;
-  }
+    h1 {
+      text-align: center;
+      font-size: 44px;
+      color: #1a73e8;
+    }
 
-  .controls {
-    text-align: center;
-    margin-bottom: 20px;
-  }
+    .controls {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-  input {
-    padding: 12px;
-    margin: 10px;
-    width: 320px;
-    border-radius: 12px;
-    border: 2px solid #ccc;
-    font-size: 28px;
-  }
+    input {
+      padding: 12px;
+      margin: 10px;
+      width: 320px;
+      border-radius: 12px;
+      border: 2px solid #ccc;
+      font-size: 28px;
+    }
 
-  button {
-    padding: 12px 32px;
-    background: #1a73e8;
-    margin-top: 20px;
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-  }
+    button {
+      padding: 12px 32px;
+      background: #1a73e8;
+      margin-top: 20px;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-  button:hover {
-    background: #0f5bd2;
-  }
+    button:hover {
+      background: #0f5bd2;
+    }
 
-  .section {
-    background: white;
-    padding: 20px;
-    margin: 20px 0;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.16);
-  }
+    .section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
 
-  #results,
-  #logs {
-    font-family: monospace;
-    white-space: pre-wrap;
-    font-size: 26px;
-    max-height: 1000px;
-    overflow-y: auto;
-  }
+    #results,
+    #logs {
+      font-family: monospace;
+      white-space: pre-wrap;
+      font-size: 20px;
+      max-height: 1000px;
+      overflow-y: auto;
+    }
 
-  .green {
-    color: green;
-    font-weight: bold;
-  }
+    .green {
+      color: green;
+      font-weight: bold;
+    }
 
-  .executing {
-    color: #d32f2f;
-    font-weight: bold;
-  }
+    .executing {
+      color: #d32f2f;
+      font-weight: bold;
+    }
 
-  .hidden {
-    display: none;
-  }
-
-  #loginSection h2 {
-    font-size: 36px;
-  }
-
-  #loginSection input {
-    font-size: 24px;
-    padding: 12px;
-    margin: 10px;
-    width: 300px;
-  }
-
-  #loginSection button {
-    font-size: 24px;
-    padding: 10px 28px;
-    margin-top: 15px;
-  }
-
-  #loginStatus {
-    font-size: 20px;
-    margin-top: 10px;
-  }
-</style>
-
-
-
-  
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
@@ -168,7 +141,7 @@
     const BATCH_SIZE = 2000;
 
     async function fetchNidWithRetry(nid, retries = 3, delay = 300) {
-      const url = `https://learn.aakashitutor.com/api/getquestionsforquiz?nid=${nid}&noredirect=true`;
+      const url = https://learn.aakashitutor.com/api/getquestionsforquiz?nid=${nid}&noredirect=true;
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
           const res = await fetch(url, { cache: "no-store" });
@@ -203,7 +176,7 @@
       const batches = Math.ceil(total / BATCH_SIZE);
       const approxTime = ((batches / workers) * 2).toFixed(1);
 
-      logsDiv.innerText += `🔁 Total NIDs to check: ${total}\n⏳ Approx time: ${approxTime}s\n`;
+      logsDiv.innerText += 🔁 Total NIDs to check: ${total}\n⏳ Approx time: ${approxTime}s\n;
 
       let dots = 0;
       status.textContent = "⏳ Executing";
@@ -237,11 +210,11 @@
         const results = await runWithConcurrency(range, 100); // 100 parallel fetches
         const found = results.filter(Boolean);
 
-        found.forEach(nid => resultsDiv.innerText += `${nid}\n`);
-        logsDiv.innerText += `✅ Batch ${batchStart} to ${batchEnd} completed | ${range.length} NIDs checked\n`;
+        found.forEach(nid => resultsDiv.innerText += ${nid}\n);
+        logsDiv.innerText += ✅ Batch ${batchStart} to ${batchEnd} completed | ${range.length} NIDs checked\n;
 
         if (((i / BATCH_SIZE) % 10 === 0) && i > 0) {
-          logsDiv.innerText += `⏸️ Cooling down for 3 seconds...\n`;
+          logsDiv.innerText += ⏸️ Cooling down for 3 seconds...\n;
           await new Promise(resolve => setTimeout(resolve, 3500));
         }
       }
