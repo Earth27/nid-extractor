@@ -20,13 +20,13 @@
 
     .controls {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     input {
       padding: 12px;
       margin: 10px;
-      width: 320px;
+      width: 300px;
       border-radius: 12px;
       border: 2px solid #ccc;
       font-size: 28px;
@@ -141,7 +141,7 @@
     const BATCH_SIZE = 2000;
 
     async function fetchNidWithRetry(nid, retries = 3, delay = 300) {
-      const url = https://learn.aakashitutor.com/api/getquestionsforquiz?nid=${nid}&noredirect=true;
+      const url = `https://learn.aakashitutor.com/api/getquestionsforquiz?nid=${nid}&noredirect=true`;
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
           const res = await fetch(url, { cache: "no-store" });
@@ -176,7 +176,7 @@
       const batches = Math.ceil(total / BATCH_SIZE);
       const approxTime = ((batches / workers) * 2).toFixed(1);
 
-      logsDiv.innerText += 🔁 Total NIDs to check: ${total}\n⏳ Approx time: ${approxTime}s\n;
+      logsDiv.innerText += `🔁 Total NIDs to check: ${total}\n⏳ Approx time: ${approxTime}s\n`;
 
       let dots = 0;
       status.textContent = "⏳ Executing";
@@ -210,11 +210,11 @@
         const results = await runWithConcurrency(range, 100); // 100 parallel fetches
         const found = results.filter(Boolean);
 
-        found.forEach(nid => resultsDiv.innerText += ${nid}\n);
-        logsDiv.innerText += ✅ Batch ${batchStart} to ${batchEnd} completed | ${range.length} NIDs checked\n;
+        found.forEach(nid => resultsDiv.innerText += `${nid}\n`);
+        logsDiv.innerText += `✅ Batch ${batchStart} to ${batchEnd} completed | ${range.length} NIDs checked\n`;
 
         if (((i / BATCH_SIZE) % 10 === 0) && i > 0) {
-          logsDiv.innerText += ⏸️ Cooling down for 3 seconds...\n;
+          logsDiv.innerText += `⏸️ Cooling down for 3 seconds...\n`;
           await new Promise(resolve => setTimeout(resolve, 3500));
         }
       }
